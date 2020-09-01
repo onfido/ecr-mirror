@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "ecr_mirror"
+version = "1.0.0"
+description = "Mirror public Docker images to private ECR repositories"
+authors = ["Tom Forbes <tom.forbes@onfido.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "^7.1.2"
+boto3 = "*"
+boto3-stubs = { extras = ["ecr"], version = "*" }
+
+[tool.poetry.dev-dependencies]
+pylint = "*"
+pytest = "*"
+pytest-black = "*"
+black = "^19.10b0"
+pytest-pythonpath = "*"
+pytest-mock = "*"
+pytest-randomly = "*"
+pytest-xdist = "*"
+pytest-watch = "*"
+taskipy = "*"
+
+[tool.poetry.scripts]
+ecr-mirror = "ecr_mirror:cli"
