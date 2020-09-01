@@ -2,7 +2,24 @@
 
 Mirror public docker images to ECR, automagically. This requires [Skopeo](https://github.com/containers/skopeo) to be installed.
 
+`pip install ecr-mirror`
+
 ## Usage
+
+```
+$ ecr-mirror
+Usage: ecr-mirror [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --registry-id TEXT  The registry ID. This is usually your AWS account ID.
+  --role-arn TEXT     Assume a specific role to push to AWS
+  --help              Show this message and exit.
+
+Commands:
+  copy        Copy all tags that match a given glob expression into ECR
+  list-repos  List all repositories that will be synced
+  sync        Copy public images to ECR using ECR tags
+```
 
 Create an ECR repository with the following two tags set:
 

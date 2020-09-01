@@ -27,8 +27,8 @@ class MirroredRepo:
 
 
 @click.group()
-@click.option("--registry-id")
-@click.option("--role-arn")
+@click.option("--registry-id", help="The registry ID. This is usually your AWS account ID.")
+@click.option("--role-arn", help="Assume a specific role to push to AWS")
 @click.pass_context
 def cli(ctx, registry_id, role_arn):
     client = boto3.client("ecr")
@@ -56,7 +56,7 @@ def cli(ctx, registry_id, role_arn):
 @click.pass_context
 def sync(ctx):
     """
-    Copy public images to ECR
+    Copy public images to ECR using ECR tags
     """
     repositories = find_repositories(ctx.obj.client, ctx.obj.registry_id)
     copy_repositories(ctx.obj.client, ctx.obj.registry_id, list(repositories))
@@ -68,7 +68,7 @@ def sync(ctx):
 @click.pass_context
 def copy(ctx, source, destination_repository):
     """
-    Copy all tags that match a glob expression into ECR
+    Copy all tags that match a given glob expression into ECR
     """
     upstream_image, upstream_tag = source.split(":")
     repositories = [
