@@ -19,7 +19,7 @@ resource "aws_ecr_repository" "repo" {
   name = "nginx"
   tags = {
     upstream-image = "nginx",
-    // Mirror 1.16* and 1.17+
+    // Mirror 1.16* and 1.17*
     upstream-tags = "1.16+/1.17+"
   }
 }
