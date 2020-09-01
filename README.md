@@ -1,5 +1,9 @@
 # Docker ECR Mirror
 
+![](https://img.shields.io/pypi/v/ecr-mirror.svg)
+![](https://img.shields.io/pypi/l/ecr-mirror.svg)
+![](https://img.shields.io/pypi/pyversions/ecr-mirror.svg)
+
 Mirror public docker images to ECR, automagically. This requires [Skopeo](https://github.com/containers/skopeo) to be installed.
 
 `pip install ecr-mirror`
@@ -31,7 +35,7 @@ You can select a range of different tags like so: `1.1[4567]*` - this will match
 
 Terraform example:
 
-```hcl-terraform
+```hcl
 resource "aws_ecr_repository" "repo" {
   name = "nginx"
   tags = {

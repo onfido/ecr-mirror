@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "ecr_mirror"
-version = "1.0.0"
+version = "1.0.1"
+license = "MIT"
 description = "Mirror public Docker images to private ECR repositories"
 authors = ["Tom Forbes <tom.forbes@onfido.com>"]
 readme = "README.md"
