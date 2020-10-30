@@ -159,9 +159,9 @@ def find_tags_to_copy(image_name, tag_patterns):
     Use Skopeo to list all available tags for an image
     """
     output = subprocess.check_output(
-        ["skopeo", "inspect", f"docker://{image_name}", "--override-os=linux"]
+        ["skopeo", "list-tags", f"docker://{image_name}", "--override-os=linux"]
     )
-    all_tags = json.loads(output)["RepoTags"]
+    all_tags = json.loads(output)["Tags"]
 
     if not tag_patterns:
         return all_tags
