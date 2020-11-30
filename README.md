@@ -31,8 +31,6 @@ Create an ECR repository with the following two tags set:
 * `upstream-tags` set to a `/`-separated list of tag **globs**, i.e `1.6.*` or just `1.2-alpine`. ECR does not allow the
   use of the `*` character in tag values, so you should use `+` as a replacement.
 
-You can select a range of different tags like so: `1.1[4567]*` - this will match `1.14` to `1.17`.
-
 Terraform example:
 
 ```hcl
