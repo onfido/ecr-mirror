@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import time
 import click
 import base64
 import fnmatch
@@ -27,7 +28,9 @@ class MirroredRepo:
 
 
 @click.group()
-@click.option("--registry-id", help="The registry ID. This is usually your AWS account ID.")
+@click.option(
+    "--registry-id", help="The registry ID. This is usually your AWS account ID."
+)
 @click.option("--role-arn", help="Assume a specific role to push to AWS")
 @click.pass_context
 def cli(ctx, registry_id, role_arn):
@@ -120,19 +123,20 @@ def copy_repositories(
     ]
     click.echo(f"Beginning the copy of {len(items)} images")
 
-    with ThreadPoolExecutor() as pool:
+    with ThreadPoolExecutor(max_workers=4) as pool:
         # This code aint' beautiful, but whatever 🤷‍
         pool.map(
             lambda item: copy_image(
                 f"{item[0].upstream_image}:{item[1]}",
                 f"{item[0].repository_uri}:{item[1]}",
                 token,
+                sleep_time=1,
             ),
             items,
         )
 
 
-def copy_image(source_image, dest_image, token):
+def copy_image(source_image, dest_image, token, sleep_time):
     """
     Copy a single image using Skopeo
     """
@@ -151,7 +155,9 @@ def copy_image(source_image, dest_image, token):
         subprocess.check_output(args_with_creds)
     except subprocess.CalledProcessError as e:
         click.secho(f'{" ".join(args)} raised an error: {e.returncode}', fg="red")
-        click.secho(f'Last output: {e.output[100:]}', fg="red")
+        click.secho(f"Last output: {e.output[100:]}", fg="red")
+
+    time.sleep(sleep_time)
 
 
 def find_tags_to_copy(image_name, tag_patterns):
@@ -191,7 +197,9 @@ def find_repositories(client: ECRClient, registry_id: str):
         if "upstream-image" in tags_dict:
             return MirroredRepo(
                 upstream_image=tags_dict["upstream-image"],
-                upstream_tags=tags_dict.get("upstream-tags", "").replace("+", "*").split("/"),
+                upstream_tags=tags_dict.get("upstream-tags", "")
+                .replace("+", "*")
+                .split("/"),
                 repository_uri=repo["repositoryUri"],
             )
 
