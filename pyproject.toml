@@ -24,6 +24,7 @@ pytest-randomly = "*"
 pytest-xdist = "*"
 pytest-watch = "*"
 taskipy = "*"
+bumpversion = "*"
 
 [tool.poetry.scripts]
 ecr-mirror = "ecr_mirror:cli"
