@@ -18,6 +18,8 @@ from mypy_boto3_ecr.type_defs import RepositoryTypeDef
 class Context:
     client: ECRClient
     registry_id: str
+    override_os: str
+    override_arch: str
 
 
 @dataclass()
@@ -32,8 +34,10 @@ class MirroredRepo:
     "--registry-id", help="The registry ID. This is usually your AWS account ID."
 )
 @click.option("--role-arn", help="Assume a specific role to push to AWS")
+@click.option("--override-os", default="linux", help="Specify the OS of images, default to linux")
+@click.option("--override-arch", default="amd64", help="Specify the ARCH of images, default to amd64")
 @click.pass_context
-def cli(ctx, registry_id, role_arn):
+def cli(ctx, registry_id, role_arn, override_os, override_arch):
     client = boto3.client("ecr")
     # Assume a role, if required:
     if role_arn:
@@ -52,7 +56,12 @@ def cli(ctx, registry_id, role_arn):
             aws_secret_access_key=tmp_secret_key,
             aws_session_token=security_token,
         )
-    ctx.obj = Context(client=client, registry_id=registry_id)
+    ctx.obj = Context(
+        client=client,
+        registry_id=registry_id,
+        override_os=override_os,
+        override_arch=override_arch,
+    )
 
 
 @cli.command()
@@ -135,8 +144,8 @@ def copy_repositories(
             items,
         )
 
-
-def copy_image(source_image, dest_image, token, sleep_time):
+@click.pass_context
+def copy_image(ctx, source_image, dest_image, token, sleep_time):
     """
     Copy a single image using Skopeo
     """
@@ -148,7 +157,8 @@ def copy_image(source_image, dest_image, token, sleep_time):
         "copy",
         f"docker://{source_image}",
         f"docker://{dest_image}",
-        "--override-os=linux",
+        f"--override-os={ctx.obj.override_os}",
+        f"--override-arch={ctx.obj.override_arch}",
     ]
     args_with_creds = args + [f"--dest-creds={token}"]
     try:
@@ -159,13 +169,19 @@ def copy_image(source_image, dest_image, token, sleep_time):
 
     time.sleep(sleep_time)
 
-
+@click.pass_context
 def find_tags_to_copy(image_name, tag_patterns):
     """
     Use Skopeo to list all available tags for an image
     """
     output = subprocess.check_output(
-        ["skopeo", "list-tags", f"docker://{image_name}", "--override-os=linux"]
+        [
+            "skopeo",
+            "list-tags",
+            f"docker://{image_name}",
+            f"--override-os={ctx.obj.override_os}",
+            f"--override-arch={ctx.obj.override_arch}",
+        ]
     )
     all_tags = json.loads(output)["Tags"]
 

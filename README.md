@@ -15,9 +15,11 @@ $ ecr-mirror
 Usage: ecr-mirror [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  --registry-id TEXT  The registry ID. This is usually your AWS account ID.
-  --role-arn TEXT     Assume a specific role to push to AWS
-  --help              Show this message and exit.
+  --registry-id TEXT    The registry ID. This is usually your AWS account ID.
+  --role-arn TEXT       Assume a specific role to push to AWS
+  --override-os TEXT    Specify the OS of images, default to linux
+  --override-arch TEXT  Specify the ARCH of images, default to amd64
+  --help                Show this message and exit.
 
 Commands:
   copy        Copy all tags that match a given glob expression into ECR
