@@ -8,8 +8,8 @@ readme = "README.md"
 keywords = ["docker", "ecr", "mirror"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
-click = "^7.1.2"
+python = "^3.7"
+click = "*"
 boto3 = "*"
 boto3-stubs = { extras = ["ecr"], version = "*" }
 
@@ -17,7 +17,7 @@ boto3-stubs = { extras = ["ecr"], version = "*" }
 pylint = "*"
 pytest = "*"
 pytest-black = "*"
-black = "^19.10b0"
+black = "*"
 pytest-pythonpath = "*"
 pytest-mock = "*"
 pytest-randomly = "*"
