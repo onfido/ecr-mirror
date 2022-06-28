@@ -34,8 +34,14 @@ class MirroredRepo:
     "--registry-id", help="The registry ID. This is usually your AWS account ID."
 )
 @click.option("--role-arn", help="Assume a specific role to push to AWS")
-@click.option("--override-os", default="linux", help="Specify the OS of images, default to linux")
-@click.option("--override-arch", default="amd64", help="Specify the ARCH of images, default to amd64")
+@click.option(
+    "--override-os", default="linux", help="Specify the OS of images, default to linux"
+)
+@click.option(
+    "--override-arch",
+    default="amd64",
+    help="Specify the ARCH of images, default to amd64",
+)
 @click.pass_context
 def cli(ctx, registry_id, role_arn, override_os, override_arch):
     client = boto3.client("ecr")
@@ -144,6 +150,7 @@ def copy_repositories(
             items,
         )
 
+
 @click.pass_context
 def copy_image(ctx, source_image, dest_image, token, sleep_time):
     """
@@ -168,6 +175,7 @@ def copy_image(ctx, source_image, dest_image, token, sleep_time):
         click.secho(f"Last output: {e.output[100:]}", fg="red")
 
     time.sleep(sleep_time)
+
 
 @click.pass_context
 def find_tags_to_copy(image_name, tag_patterns):
