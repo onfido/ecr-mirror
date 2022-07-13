@@ -178,7 +178,7 @@ def copy_image(ctx, source_image, dest_image, token, sleep_time):
 
 
 @click.pass_context
-def find_tags_to_copy(image_name, tag_patterns):
+def find_tags_to_copy(ctx, image_name, tag_patterns):
     """
     Use Skopeo to list all available tags for an image
     """
