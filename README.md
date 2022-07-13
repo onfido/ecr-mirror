@@ -32,6 +32,8 @@ Create an ECR repository with the following two tags set:
 * `upstream-image` set to a public Docker hub image, i.e `nginx` or `istio/proxyv2`
 * `upstream-tags` set to a `/`-separated list of tag **globs**, i.e `1.6.*` or just `1.2-alpine`. ECR does not allow the
   use of the `*` character in tag values, so you should use `+` as a replacement.
+* `ignore-tags` set to a `/`-separated list of tag **globs** to ignore. ECR does not allow the
+  use of the `*` character in tag values, so you should use `+` as a replacement.
 
 Terraform example:
 
@@ -42,6 +44,7 @@ resource "aws_ecr_repository" "repo" {
     upstream-image = "nginx",
     // Mirror 1.16* and 1.17*
     upstream-tags = "1.16+/1.17+"
+    ignore-tags = "+-gpu"
   }
 }
 ```

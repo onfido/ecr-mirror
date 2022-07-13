@@ -27,6 +27,7 @@ class MirroredRepo:
     upstream_image: str
     repository_uri: str
     upstream_tags: List[str]
+    ignore_tags: List[str]
 
 
 @click.group()
@@ -94,6 +95,7 @@ def copy(ctx, source, destination_repository):
             upstream_image=upstream_image,
             upstream_tags=[upstream_tag],
             repository_uri=destination_repository,
+            ignore_tags=[]
         )
     ]
     copy_repositories(ctx.obj.client, ctx.obj.registry_id, repositories)
@@ -123,8 +125,9 @@ def ecr_login(client: ECRClient, registry_id: str) -> str:
     ).decode()
 
 
+@click.pass_context
 def copy_repositories(
-    client: ECRClient, registry_id: str, repositories: List[MirroredRepo]
+    ctx, client: ECRClient, registry_id: str, repositories: List[MirroredRepo]
 ):
     """
     Perform the actual, concurrent copy of the images
@@ -134,7 +137,7 @@ def copy_repositories(
     items = [
         (repo, tag)
         for repo in repositories
-        for tag in find_tags_to_copy(repo.upstream_image, repo.upstream_tags)
+        for tag in find_tags_to_copy(repo.upstream_image, repo.upstream_tags, repo.ignore_tags)
     ]
     click.echo(f"Beginning the copy of {len(items)} images")
 
@@ -142,6 +145,7 @@ def copy_repositories(
         # This code aint' beautiful, but whatever 🤷‍
         pool.map(
             lambda item: copy_image(
+                ctx.obj,
                 f"{item[0].upstream_image}:{item[1]}",
                 f"{item[0].repository_uri}:{item[1]}",
                 token,
@@ -151,8 +155,7 @@ def copy_repositories(
         )
 
 
-@click.pass_context
-def copy_image(ctx, source_image, dest_image, token, sleep_time):
+def copy_image(ctx: Context, source_image, dest_image, token, sleep_time):
     """
     Copy a single image using Skopeo
     """
@@ -164,8 +167,8 @@ def copy_image(ctx, source_image, dest_image, token, sleep_time):
         "copy",
         f"docker://{source_image}",
         f"docker://{dest_image}",
-        f"--override-os={ctx.obj.override_os}",
-        f"--override-arch={ctx.obj.override_arch}",
+        f"--override-os={ctx.override_os}",
+        f"--override-arch={ctx.override_arch}",
     ]
     args_with_creds = args + [f"--dest-creds={token}"]
     try:
@@ -178,7 +181,7 @@ def copy_image(ctx, source_image, dest_image, token, sleep_time):
 
 
 @click.pass_context
-def find_tags_to_copy(ctx, image_name, tag_patterns):
+def find_tags_to_copy(ctx, image_name, tag_patterns, ignore_tags):
     """
     Use Skopeo to list all available tags for an image
     """
@@ -193,13 +196,24 @@ def find_tags_to_copy(ctx, image_name, tag_patterns):
     )
     all_tags = json.loads(output)["Tags"]
 
-    if not tag_patterns:
-        return all_tags
+    def does_match(tag):
+        any_matches = any(fnmatch.fnmatch(tag, pattern) for pattern in tag_patterns)
+        any_negates = any(fnmatch.fnmatch(tag, pattern) for pattern in ignore_tags)
+
+        # Copy all tags if only ignored tags are given
+        if not tag_patterns and not any_negates:
+            return True
+
+        # Else if something has negated it, skip
+        if any_negates:
+            return False
+
+        return any_matches
 
     yield from (
         tag
         for tag in all_tags
-        if any(fnmatch.fnmatch(tag, pattern) for pattern in tag_patterns)
+        if does_match(tag)
     )
 
 
@@ -222,6 +236,9 @@ def find_repositories(client: ECRClient, registry_id: str):
             return MirroredRepo(
                 upstream_image=tags_dict["upstream-image"],
                 upstream_tags=tags_dict.get("upstream-tags", "")
+                .replace("+", "*")
+                .split("/"),
+                ignore_tags=tags_dict.get("ignore-tags", "")
                 .replace("+", "*")
                 .split("/"),
                 repository_uri=repo["repositoryUri"],
