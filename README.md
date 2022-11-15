@@ -17,8 +17,10 @@ Usage: ecr-mirror [OPTIONS] COMMAND [ARGS]...
 Options:
   --registry-id TEXT    The registry ID. This is usually your AWS account ID.
   --role-arn TEXT       Assume a specific role to push to AWS
-  --override-os TEXT    Specify the OS of images, default to linux
-  --override-arch TEXT  Specify the ARCH of images, default to amd64
+  --override-os TEXT    Specify the OS of images, default to "linux"
+  --override-arch TEXT  Specify the ARCH of images, default to "amd64". If set
+                        to "all" - all architectures will be synced
+
   --help                Show this message and exit.
 
 Commands:
