@@ -7,6 +7,7 @@ import fnmatch
 import json
 import boto3
 import subprocess
+import sys
 from dataclasses import dataclass
 
 from mypy_boto3_ecr import ECRClient
@@ -36,12 +37,12 @@ class MirroredRepo:
 )
 @click.option("--role-arn", help="Assume a specific role to push to AWS")
 @click.option(
-    "--override-os", default="linux", help="Specify the OS of images, default to linux"
+    "--override-os", default="linux", help="Specify the OS of images, default to \"linux\""
 )
 @click.option(
     "--override-arch",
     default="amd64",
-    help="Specify the ARCH of images, default to amd64",
+    help="Specify the ARCH of images, default to \"amd64\". If set to \"all\" - all architectures will be synced"
 )
 @click.pass_context
 def cli(ctx, registry_id, role_arn, override_os, override_arch):
@@ -168,11 +169,14 @@ def copy_image(ctx: Context, source_image, dest_image, token, sleep_time):
         f"docker://{source_image}",
         f"docker://{dest_image}",
         f"--override-os={ctx.override_os}",
-        f"--override-arch={ctx.override_arch}",
     ]
+    if ctx.override_arch == "all":
+        args = args + [f"--multi-arch=all"]
+    else:
+        args = args + [f"--override-arch={ctx.override_arch}"]
     args_with_creds = args + [f"--dest-creds={token}"]
     try:
-        subprocess.check_output(args_with_creds)
+        subprocess.check_output(args_with_creds, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         click.secho(f'{" ".join(args)} raised an error: {e.returncode}', fg="red")
         click.secho(f"Last output: {e.output[100:]}", fg="red")
@@ -185,15 +189,13 @@ def find_tags_to_copy(ctx, image_name, tag_patterns, ignore_tags):
     """
     Use Skopeo to list all available tags for an image
     """
-    output = subprocess.check_output(
-        [
-            "skopeo",
-            "list-tags",
-            f"docker://{image_name}",
-            f"--override-os={ctx.obj.override_os}",
-            f"--override-arch={ctx.obj.override_arch}",
-        ]
-    )
+    cmd = ["skopeo",
+           "list-tags",
+           f"docker://{image_name}",
+           f"--override-os={ctx.obj.override_os}"]
+    if ctx.obj.override_arch != "all":
+        cmd = cmd + [f"--override-arch={ctx.obj.override_arch}"]
+    output = subprocess.check_output(cmd)
     all_tags = json.loads(output)["Tags"]
 
     def does_match(tag):
