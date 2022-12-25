@@ -53,7 +53,7 @@ resource "aws_ecr_repository" "repo" {
 
 Running `ecr-mirror sync` will begin concurrently fetching all images and pushing them to ECR.
 
-You can run `ecr-mirror list` to see all repositories that will be mirrored.
+You can run `ecr-mirror list-repos` to see all repositories that will be mirrored.
 
 You can also manually copy specific image patterns using `ecr-mirror copy`:
 
